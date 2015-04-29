@@ -165,11 +165,11 @@ func (daemon *Daemon) containerRoot(id string) string {
 // Load reads the contents of a container from disk
 // This is typically done at startup.
 func (daemon *Daemon) load(id string) (*Container, error) {
-	container := &Container{
-		root:         daemon.containerRoot(id),
-		State:        NewState(),
-		execCommands: newExecStore(),
-	}
+	container := &Container{}
+	container.root = daemon.containerRoot(id)
+	container.State = NewState()
+	container.execCommands = newExecStore()
+
 	if err := container.FromDisk(); err != nil {
 		return nil, err
 	}
@@ -592,23 +592,22 @@ func (daemon *Daemon) newContainer(name string, config *runconfig.Config, imgID 
 	daemon.generateHostname(id, config)
 	entrypoint, args := daemon.getEntrypointAndArgs(config.Entrypoint, config.Cmd)
 
-	container := &Container{
-		// FIXME: we should generate the ID here instead of receiving it as an argument
-		ID:              id,
-		Created:         time.Now().UTC(),
-		Path:            entrypoint,
-		Args:            args, //FIXME: de-duplicate from config
-		Config:          config,
-		hostConfig:      &runconfig.HostConfig{},
-		ImageID:         imgID,
-		NetworkSettings: &network.Settings{},
-		Name:            name,
-		Driver:          daemon.driver.String(),
-		ExecDriver:      daemon.execDriver.Name(),
-		State:           NewState(),
-		execCommands:    newExecStore(),
-	}
+	container := &Container{}
+	container.ID = id // FIXME: we should generate the ID here instead of receiving it as an argument
+	container.Created = time.Now().UTC()
+	container.Path = entrypoint
+	container.Args = args //FIXME: de-duplicate from config
+	container.Config = config
+	container.hostConfig = &runconfig.HostConfig{}
+	container.ImageID = imgID
+	container.NetworkSettings = &network.Settings{}
+	container.Name = name
+	container.Driver = daemon.driver.String()
+	container.ExecDriver = daemon.execDriver.Name()
+	container.State = NewState()
+	container.execCommands = newExecStore()
 	container.root = daemon.containerRoot(container.ID)
+
 	return container, err
 }
 
